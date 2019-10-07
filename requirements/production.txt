@@ -1,0 +1,6 @@
+aiohttp==3.5.4
+aiohttp_jinja2==1.1.0
+trafaret_config==2.0.2
+markdown2==2.3.7
+aioredis==1.2.0
+uvloop==0.12.2
