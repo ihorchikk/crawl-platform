@@ -108,3 +108,6 @@ adev: wait_resources
 ## Runs application with specified postgres and redis.
 wait_resources:
 	python3 -m $(PROJECT_NAME).utils.wait_script
+
+start_app:
+    python3 /api/data_delivery_flow_api/main.py

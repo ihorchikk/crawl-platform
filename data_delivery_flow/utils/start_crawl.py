@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import logging
 from concurrent.futures.process import ProcessPoolExecutor
 
@@ -15,23 +16,13 @@ parser.add_argument(
     required=True)
 
 
-async def start_parse_process(spider_name, event_loop):
+async def start_parse_process(spider_name):
     executor = ProcessPoolExecutor()
+    loop = asyncio.get_event_loop()
     try:
-        event_loop.run_until_complete(
-            run_blocking_tasks(executor, spider_name, event_loop)
-        )
+        await loop.run_in_executor(executor, start_crawl, spider_name)
     finally:
         executor.shutdown()
-
-
-async def run_blocking_tasks(executor, spider_name, event_loop):
-    log = logging.getLogger('run_blocking_tasks')
-    log.info('starting')
-    log.info('creating executor tasks')
-    log.info('waiting for executor tasks')
-    await event_loop.run_in_executor(executor, start_crawl, spider_name)
-    log.info('exiting')
 
 
 def start_crawl(spider_name):

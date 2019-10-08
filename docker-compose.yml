@@ -2,36 +2,40 @@ version: '3.2'
 
 services:
 
-  dd_flow_api_app: &app
+  dd_flow_api_app:
     tty: true
     build:
       context: .
       args:
-        requirements: requirements/development.txt
-    container_name: api
+        requirements: requirements/production.txt
+    container_name: dd-flow
     environment:
-      # use in code
-      - DEBUG=True
-      - SETTINGS_FILE=api.dev.yml
-      - PYTHONUNBUFFERED=1
+      - SETTINGS_FILE=api.prod.yml
+      - PYTHONPATH=/app
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error}]
     restart: always
     volumes:
-      - .:/app:delegated
+      - .:/app
     depends_on:
       - redis
+      - rabbitmq
+    entrypoint: "python3 api/data_delivery_flow_api/main.py"
     ports:
       - 8080:8080
-      - 8081:8081
-    command: make adev
+    expose:
+      - "8080"
 
   redis:
     image: redis:4
     ports:
         - 6379
 
-  test:
-    <<: *app
-    container_name: dd_flow_api_test
+  rabbitmq:
+    image: rabbitmq
+    command: rabbitmq-server
+    expose:
+      - "5672"
+      - "15672"
     ports:
-      - 8082:8082
-    command: make _test
+      - 5672
+      - 15672
