@@ -1,13 +1,4 @@
-# -*- coding: utf-8 -*-
-
-# Scrapy settings for data_delivery_flow project
-#
-# For simplicity, this file contains only settings considered important or
-# commonly used. You can find more settings consulting the documentation:
-#
-#     https://docs.scrapy.org/en/latest/topics/settings.html
-#     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+from data_delivery_flow.utils.useragents import get_user_agent
 
 BOT_NAME = 'data_delivery_flow'
 
@@ -16,7 +7,7 @@ NEWSPIDER_MODULE = 'data_delivery_flow.spiders'
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
-USER_AGENT = 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Safari/537.36'
+USER_AGENT = get_user_agent()
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False

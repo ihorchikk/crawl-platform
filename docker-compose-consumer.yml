@@ -1,0 +1,23 @@
+version: '3.2'
+
+services:
+
+  consumer:
+    tty: true
+    build:
+      context: .
+      args:
+        requirements: ../requirements/production.txt
+    container_name: consumer
+    environment:
+      - PYTHONPATH=/app
+    restart: always
+    volumes:
+      - .:/app
+    entrypoint: "python3 consumer.py"
+    networks:
+      - news-project-dd-flow_dd-flow-network
+
+networks:
+  news-project-dd-flow_dd-flow-network:
+    external: true

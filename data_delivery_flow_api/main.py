@@ -1,6 +1,7 @@
+import uvloop
 from aiohttp import web
 
-from api.data_delivery_flow_api.app import init_app
+from data_delivery_flow_api.app import init_app
 
 
 def create_app() -> web.Application:
@@ -15,7 +16,7 @@ def create_app() -> web.Application:
 def main() -> None:
     app = init_app()
     app_settings = app['config']['app']
-    # uvloop.install()
+    uvloop.install()
     web.run_app(
         app,
         host=app_settings['host'],

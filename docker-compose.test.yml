@@ -1,0 +1,39 @@
+version: '3.2'
+
+services:
+
+  test:
+    build:
+      context: .
+      args:
+        requirements: requirements/ci.txt
+    restart: always
+    container_name: dd-flow
+    volumes:
+      - .:/app:cached
+    entrypoint: "pytest --cov-report term-missing --cov=new-project-dd-flow tests/"
+    environment:
+      CONFIG_FILE: test.yml
+    networks:
+      - dd-flow-network
+
+  redis:
+    image: redis:4
+    ports:
+      - 6379
+    networks:
+      - dd-flow-network
+
+    rabbitmq:
+      image: rabbitmq
+      command: rabbitmq-server
+      expose:
+        - "5672"
+        - "15672"
+      ports:
+        - 5672
+        - 15672
+
+networks:
+  dd-flow-network:
+    driver: bridge

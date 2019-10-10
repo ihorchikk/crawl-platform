@@ -1,36 +1,44 @@
-import argparse
 import asyncio
-import logging
-from concurrent.futures.process import ProcessPoolExecutor
-
+from concurrent.futures import Executor
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
 
-parser = argparse.ArgumentParser()
 
-parser.add_argument(
-    '--spider_name',
-    dest='spider_name',
-    metavar='NAME',
-    help='Spider name',
-    required=True)
+async def start_parse_process(executor: Executor,
+                              spider_name: str) \
+        -> asyncio.Future.result or str:
+    """
 
+    Parameters
+    ----------
+    executor
+    spider_name
 
-async def start_parse_process(spider_name):
-    executor = ProcessPoolExecutor()
+    Returns
+    -------
+
+    """
     loop = asyncio.get_event_loop()
     try:
-        await loop.run_in_executor(executor, start_crawl, spider_name)
-    finally:
-        executor.shutdown()
+        await loop.run_in_executor(executor,
+                                   start_crawl,
+                                   spider_name)
+    except Exception as e:
+        print(e.with_traceback(e.__traceback__))
 
 
-def start_crawl(spider_name):
+def start_crawl(spider_name: str) \
+        -> None:
+    """
+
+    Parameters
+    ----------
+    spider_name
+
+    Returns
+    -------
+
+    """
     process = CrawlerProcess(settings=get_project_settings())
     process.crawl(spider_name)
     process.start(stop_after_crawl=True)
-
-
-if __name__ == '__main__':
-    args = parser.parse_args()
-    start_crawl(args.spider_name)

@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 import pika
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host='0.0.0.0', port=5672))
+connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
 channel = connection.channel()
 
-channel.queue_declare(queue='dd-item')
+channel.queue_declare(queue='dd-items')
 
 print(' [*] Waiting for messages. To exit press CTRL+C')
 
@@ -15,6 +14,6 @@ def callback(ch, method, properties, body):
 
 
 channel.basic_consume(on_message_callback=callback,
-                      queue='dd-item')
+                      queue='dd-items')
 
 channel.start_consuming()

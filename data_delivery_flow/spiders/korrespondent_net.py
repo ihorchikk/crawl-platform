@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from data_delivery_flow.items import DataDeliveryFlowItem, DataDeliveryFlowLoader
 from data_delivery_flow.utils.spiders import BaseSpider
 

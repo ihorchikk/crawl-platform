@@ -10,32 +10,42 @@ services:
         requirements: requirements/production.txt
     container_name: dd-flow
     environment:
-      - SETTINGS_FILE=api.prod.yml
+      - SETTINGS_FILE=prod.yml
       - PYTHONPATH=/app
       - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit log_levels [{connection,error}]
     restart: always
     volumes:
-      - .:/app
+      - .:/app:cached
     depends_on:
       - redis
       - rabbitmq
-    entrypoint: "python3 api/data_delivery_flow_api/main.py"
+    entrypoint: "python3 data_delivery_flow_api/main.py"
     ports:
       - 8080:8080
     expose:
       - "8080"
+    networks:
+      - dd-flow-network
 
   redis:
     image: redis:4
     ports:
         - 6379
+    networks:
+      - dd-flow-network
 
   rabbitmq:
     image: rabbitmq
     command: rabbitmq-server
     expose:
-      - "5672"
-      - "15672"
+      - 5672
+      - 15672
     ports:
       - 5672
       - 15672
+    networks:
+      - dd-flow-network
+
+networks:
+    dd-flow-network:
+      driver: bridge
