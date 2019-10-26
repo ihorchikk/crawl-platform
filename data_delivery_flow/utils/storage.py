@@ -4,11 +4,9 @@ from utils.config import get_config_default
 
 
 def redis_pool() -> redis.ConnectionPool:
-    """
+    """ Get connection pool to Redis.
 
-    Returns
-    -------
-
+    :return: redis.ConnectionPool
     """
     config = get_config_default()
     redis_pool = redis.ConnectionPool(host=config['redis']['host'],
@@ -19,11 +17,9 @@ def redis_pool() -> redis.ConnectionPool:
 
 
 def connection_redis() -> redis.StrictRedis:
-    """
+    """ Get interface to Redis via connection.
 
-    Returns
-    -------
-
+    :return: redis.StrictRedis
     """
     redis_conn = redis.StrictRedis(connection_pool=redis_pool())
     return redis_conn

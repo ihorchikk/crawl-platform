@@ -1,97 +1,73 @@
 # -*- coding: utf-8 -*-
 import logging
-import pika
 
 from pydispatch import dispatcher
 from scrapy import signals
 from scrapy.utils.serialize import ScrapyJSONEncoder
-from twisted.internet.threads import deferToThread
 
+from data_delivery_flow.utils.brocker import RabbitMQConnection
 from utils.config import get_config_default
 
-logging.getLogger("pika").setLevel(logging.INFO)
+logging.getLogger("pika").setLevel(logging.WARNING)
+logger = logging.getLogger("MessageQueuePipeline")
 
 
 class MessageQueuePipeline(object):
 
-    def __init__(self, host, port, queue):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(host=host, port=port))
-        self.queue = queue
+    def __init__(self, config):
+        self.config = config['rabbitmq']
+        self.queue = self.config['queue']
+        self.exchange_name = self.config['exchange_name']
+        self.exchange_type = self.config['exchange_type']
+        self.routing_key = self.config['routing_key']
+        self.host = self.config['host']
+        self.port = self.config['port']
+        self.rbmq_conn = RabbitMQConnection.get_connection(host=self.host,
+                                                           port=self.port)
+        self.publisher = self.rbmq_conn.get_channel(exchange_name=self.exchange_name,
+                                                    exchange_type=self.exchange_type,
+                                                    queue=self.queue)
         dispatcher.connect(self.spider_opened, signals.spider_opened)
         dispatcher.connect(self.spider_closed, signals.spider_closed)
 
     @classmethod
     def from_settings(cls, settings):
-        """
+        """ Setup config to MessageQueuePipeline object.
 
-        Parameters
-        ----------
-        settings
-
-        Returns
-        -------
-
+        :param settings:
+        :return:
         """
         config = get_config_default()
-        host = config['rabbitmq']['host']
-        port = config['rabbitmq']['port']
-        queue = config['rabbitmq']['queue']
-        return cls(host=host, port=port, queue=queue)
+        return cls(config=config)
 
     def spider_opened(self, spider):
+        """ Action after spider open process.
+
+        :param spider:
+        :return:
         """
-
-        Parameters
-        ----------
-        spider
-
-        Returns
-        -------
-
-        """
-        self.publisher = self.connection.channel()
-        self.publisher.queue_declare(queue=self.queue)
+        logger.info(f'Spider {spider.name} is opening and has next config: q: {self.queue}, '
+                    f'ex.n: {self.exchange_name}, ex.t: {self.exchange_type}, rk: {self.routing_key}')
 
     def spider_closed(self, spider):
+        """ Action after spider close process.
+
+        :param spider:
+        :return:
         """
-
-        Parameters
-        ----------
-        spider
-
-        Returns
-        -------
-
-        """
-        self.publisher.close()
+        logger.info(f'Rabbitmq connection closed')
+        self.rbmq_conn.connection.close()
 
     def process_item(self, item, spider):
+        """ Handle items. Send items to RabbitMQ.
+
+        :param item:
+        :param spider:
+        :return:
         """
-
-        Parameters
-        ----------
-        item
-        spider
-
-        Returns
-        -------
-
-        """
-        return deferToThread(self._process_item, item, spider)
-
-    def _process_item(self, item, spider):
-        """
-
-        Parameters
-        ----------
-        item
-        spider
-
-        Returns
-        -------
-
-        """
-        self.publisher.basic_publish(exchange='',
-                                     routing_key=self.queue,
-                                     body=ScrapyJSONEncoder().encode(dict(item)))
+        self.rbmq_conn.send_message(channel=self.publisher,
+                                    message=ScrapyJSONEncoder().encode(dict(item)),
+                                    exchange_name=self.exchange_name,
+                                    routing_key=self.routing_key)
+        logger.debug(f'Item scraped')
         return item

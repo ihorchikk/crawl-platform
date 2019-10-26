@@ -29,20 +29,19 @@ CONFIG_TRAFARET = trafaret.Dict({
             'host': trafaret.String(),
             'port': trafaret.Int(),
             'queue': trafaret.String(),
+            'exchange_name': trafaret.String(),
+            'exchange_type': trafaret.String(),
+            'routing_key': trafaret.String(),
         }),
 })
 
 
 def get_config(argv: Any = None) -> Any:
-    """
+    """ Main function of config. Get default config or custom and
+    verification them by trafaret scheme.
 
-    Parameters
-    ----------
-    argv
-
-    Returns
-    -------
-
+    :param argv: Any
+    :return: Any
     """
     ap = argparse.ArgumentParser()
     commandline.standard_argparse_options(
@@ -55,25 +54,18 @@ def get_config(argv: Any = None) -> Any:
 
 
 def init_config_app(app: web.Application, *, config: Optional[List[str]] = None) -> None:
-    """
+    """ Save config to application for using in future.
 
-    Parameters
-    ----------
-    app
-    config
-
-    Returns
-    -------
-
+    :param app: web application
+    :param config: config
+    :return: None
     """
     app['config'] = get_config(config or ['-c', DEFAULT_CONFIG_PATH.as_posix()])
 
 
 def get_config_default() -> Any:
-    """
+    """ Get default config.
 
-    Returns
-    -------
-
+    :return: Any
     """
     return get_config(['-c', DEFAULT_CONFIG_PATH.as_posix()])

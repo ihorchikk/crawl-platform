@@ -46,7 +46,8 @@ class DataDeliveryFlowSpiderMiddleware(object):
             yield r
 
     def spider_opened(self, spider):
-        spider.logger.info('Spider opened: %s' % spider.name)
+        spider.logger.info('Spider opened [spider middleware]: %s' % spider.name)
+
 
 
 class DataDeliveryFlowDownloaderMiddleware(object):
@@ -93,4 +94,4 @@ class DataDeliveryFlowDownloaderMiddleware(object):
         pass
 
     def spider_opened(self, spider):
-        spider.logger.info('Spider opened: %s' % spider.name)
+        spider.logger.info('Spider opened [downloader middleware]: %s' % spider.name)

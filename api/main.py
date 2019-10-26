@@ -1,10 +1,14 @@
 import uvloop
 from aiohttp import web
 
-from data_delivery_flow_api.app import init_app
+from api.app import init_app
 
 
 def create_app() -> web.Application:
+    """ Creating application.
+
+    :return: web application
+    """
     import aiohttp_debugtoolbar
 
     app = init_app()
@@ -14,6 +18,12 @@ def create_app() -> web.Application:
 
 
 def main() -> None:
+    """ Main function in web application. Getting config
+    and starting application. For local debug.
+    In production use gunicorn.
+
+    :return: None
+    """
     app = init_app()
     app_settings = app['config']['app']
     uvloop.install()

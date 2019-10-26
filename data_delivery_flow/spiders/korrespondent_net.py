@@ -3,7 +3,7 @@ from data_delivery_flow.utils.spiders import BaseSpider
 
 
 class KorrespondentNetSpider(BaseSpider):
-    name = 'start-request:korrespondent.net'
+    name = 'korrespondent.net'
     allowed_domains = ['korrespondent.net']
 
     def parse(self, response):

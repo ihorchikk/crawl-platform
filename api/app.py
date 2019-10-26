@@ -8,24 +8,20 @@ from aiohttp import web
 from aiohttp.web_middlewares import normalize_path_middleware
 from aiohttp_apispec import validation_middleware, setup_aiohttp_apispec
 
-from data_delivery_flow_api.routes import init_routes
+from api.routes import init_routes
 from utils.config import init_config_app
 
 path = Path(__file__).parent
 
 
 async def redis(app: web.Application) -> None:
-    """ A function that, when the server is started, connects to redis,
+    """When the server has started, connects to redis,
     and after stopping it breaks the connection (after yield)
 
-    Parameters
-    ----------
-    app - web application
-
-    Returns
-    -------
-
+    :param app: Web application
+    :return: None
     """
+
     config = app['config']['redis']
 
     create_redis = partial(
@@ -40,50 +36,38 @@ async def redis(app: web.Application) -> None:
     await app['create_redis'].wait_closed()
 
 
-async def init_tasks(app: web.Application) -> web.Application:
-    """
+async def on_start(app: web.Application) -> web.Application:
+    """ Save some objects to application for using in future and init
+    task collection to manage all tasks and gracefully finish them.
 
-    Parameters
-    ----------
-    app - web application
-
-    Returns
-    -------
-
+    :param app: Web application
+    :return: Web application
     """
     app['tasks'] = []
     app['executor'] = ProcessPoolExecutor()
     return app
 
 
-async def gracefully_stop_tasks(app: web.Application) -> web.Application:
-    """
+async def gracefully_on_stop(app: web.Application) -> web.Application:
+    """ Gracefully cancel created tasks and shutdown all created
+    on start application.
 
-    Parameters
-    ----------
-    app - web application
-
-    Returns
-    -------
-
+    :param app: Web application
+    :return: Web application
     """
     for task in app['tasks']:
         task.cancel()
         await task
-    app['executor'].shutdown()
+
+    await app['executor'].shutdown()
     return app
 
 
 def init_app(config: Optional[List[str]] = None) -> web.Application:
-    """
+    """ Initializing web application with middlewares, config, routs and etc.
 
-    Parameters
-    ----------
-    config
-
-    Returns
-    -------
-
+    :param config: Configuration
+    :return: Web application
     """
     app = web.Application(
         middlewares=[normalize_path_middleware(), validation_middleware]
@@ -95,8 +79,8 @@ def init_app(config: Optional[List[str]] = None) -> web.Application:
         redis,
     ])
 
-    app.on_startup.append(init_tasks)
-    app.on_cleanup.append(gracefully_stop_tasks)
+    app.on_startup.append(on_start)
+    app.on_cleanup.append(gracefully_on_stop)
 
     setup_aiohttp_apispec(
         app=app,
@@ -107,3 +91,8 @@ def init_app(config: Optional[List[str]] = None) -> web.Application:
     )
 
     return app
+
+
+app = init_app()
+
+

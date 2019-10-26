@@ -1,11 +1,13 @@
 import logging
 
-import graypy
 
-from utils.config import get_config, get_config_default
+def create_logger(logger_name):
+    """ Additional function to handle logging in all application and
+    can connect to Graylog to collect all logs in one place.
 
-
-def create_graylog_logger(logger_name):
+    :param logger_name:
+    :return:
+    """
     logger = logging.getLogger(logger_name)
     logger.setLevel(level=logging.INFO)
     return logger

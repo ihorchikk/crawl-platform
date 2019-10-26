@@ -1,9 +1,10 @@
 import asyncio
+
 import ujson
 from aiohttp import web
 from aiohttp_apispec import request_schema, docs
 
-from data_delivery_flow_api.schemas import StartUrlSchema, SpiderSchema
+from api.schemas import StartUrlSchema, SpiderSchema
 from data_delivery_flow.utils.start_crawl import start_parse_process
 
 
@@ -17,8 +18,13 @@ from data_delivery_flow.utils.start_crawl import start_parse_process
       }
       )
 async def get_start_urls_by_spider(request: web.Request) -> web.Response:
+    """ Get all spider names which have urls in Redis.
+
+    :param request: web request
+    :return: web response in json format
+    """
     redis = request.app['create_redis']
-    response_data = await redis.keys('start-request:*')
+    response_data = await redis.keys('*')
     return web.json_response({"objects": response_data}, dumps=ujson.dumps)
 
 
@@ -32,6 +38,11 @@ async def get_start_urls_by_spider(request: web.Request) -> web.Response:
       )
 @request_schema(StartUrlSchema)
 async def post_start_urls_by_spider(request: web.Request) -> web.Response:
+    """ Add start urls by spider name to Redis.
+
+    :param request: web request
+    :return: web response without body with 201 response status
+    """
     redis = request.app['create_redis']
     data = await request.json()
     await redis.sadd(data['name'], *data['start_urls'])
@@ -48,6 +59,11 @@ async def post_start_urls_by_spider(request: web.Request) -> web.Response:
       )
 @request_schema(SpiderSchema)
 async def delete_start_urls_by_spider(request: web.Request) -> web.Response:
+    """ Remove start urls from Redis by spider name.
+
+    :param request: web request
+    :return: web response without body with 204 response status
+    """
     redis = request.app['create_redis']
     data = await request.json()
     await redis.delete(data['name'])
@@ -65,13 +81,19 @@ async def delete_start_urls_by_spider(request: web.Request) -> web.Response:
       )
 @request_schema(SpiderSchema)
 async def start_parsing(request: web.Request) -> web.Response:
+    """ Start crawl process by spider name.
+
+    :param request: web request
+    :return: web response in json format
+    """
     redis = request.app['create_redis']
     data = await request.json()
     spider_name = data['name']
     if await redis.exists(spider_name):
         try:
             executor = request.app['executor']
-            request.app['tasks'].append(asyncio.create_task(start_parse_process(executor, spider_name)))
+            task = asyncio.create_task(start_parse_process(executor, spider_name))
+            request.app['tasks'].append(task)
         except Exception as e:
             print(e)
         return web.json_response({"status": 'started'}, dumps=ujson.dumps)
@@ -89,5 +111,10 @@ async def start_parsing(request: web.Request) -> web.Response:
       }
       )
 async def get_all_running_tasks_count(request: web.Request) -> web.Response:
+    """ Get all active tasks in queue.
+
+    :param request: web request
+    :return: web response in json format
+    """
     all_tasks_count = len(asyncio.Task.all_tasks())
     return web.json_response({'count': all_tasks_count})
