@@ -2,25 +2,13 @@ version: '3.2'
 
 services:
 
-  nginx:
-    build: ./nginx
-    restart: always
-    depends_on:
-      - api
-    ports:
-      - 8001:8001
-    expose:
-      - "8001"
-    networks:
-      - nginx-network
-
-  api:
+  dd_flow_api_app:
     tty: true
     build:
       context: .
       args:
         requirements: requirements/production.txt
-    container_name: api-dd
+    container_name: dd-flow
     environment:
       - SETTINGS_FILE=prod.yml
       - PYTHONPATH=/app
@@ -31,22 +19,20 @@ services:
     depends_on:
       - redis
       - rabbitmq
-    entrypoint: "gunicorn api.app:app -b 0.0.0.0:8000 --worker-class aiohttp.GunicornUVLoopWebWorker"
+    entrypoint: "python3 data_delivery_flow_api/main.py"
     ports:
-      - 8000:8000
+      - 8080:8080
+    expose:
+      - "8080"
     networks:
-      - nginx-network
-      - redis-network
-      - rabbitmq-network
+      - dd-flow-network
 
   redis:
     image: redis:4
     ports:
         - 6379
     networks:
-      - redis-network
-    logging:
-      driver: none
+      - dd-flow-network
 
   rabbitmq:
     image: rabbitmq
@@ -58,14 +44,8 @@ services:
       - 5672
       - 15672
     networks:
-      - rabbitmq-network
-    logging:
-      driver: none
+      - dd-flow-network
 
 networks:
-    redis-network:
-      driver: bridge
-    rabbitmq-network:
-      driver: bridge
-    nginx-network:
+    dd-flow-network:
       driver: bridge
